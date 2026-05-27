@@ -1,0 +1,8 @@
+node_modules/
+credentials.json
+.env
+/.vscode/
+/.wwebjs_auth/
+data/mock_sheets.json
+dist/
+*.log

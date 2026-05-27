@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edoofa WhatsApp Voice Note AI Pipeline</title>
+  
+  <!-- FontAwesome Icons & Google Fonts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- HEADER BAR -->
+    <header>
+      <div class="logo-section">
+        <h1><i class="fa-brands fa-whatsapp"></i> Edoofa Voice-AI <span>Pipeline</span></h1>
+        <p>Real-time group voice note tracking, transcription, and AI triage for 2,500+ students</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-secondary" id="openSettingsBtn">
+          <i class="fa-solid fa-sliders"></i> API Settings
+        </button>
+      </div>
+    </header>
+
+    <!-- CONTENT GRID -->
+    <div class="grid grid-2-1">
+      
+      <!-- LEFT HAND COMPONENT: METRICS & LIVE SPREADSHEET (OCCUPIES 2 COLS ON LARGER SCREENS) -->
+      <div class="spreadsheet-section">
+        <div class="card">
+          <div class="spreadsheet-header">
+            <h2><i class="fa-solid fa-table"></i> Active Student Records</h2>
+            <button class="btn btn-secondary btn-sm" id="refreshRecordsBtn">
+              <i class="fa-solid fa-arrows-rotate"></i> Refresh View
+            </button>
+          </div>
+          
+          <div class="spreadsheet-scroll">
+            <table class="sheets-table" id="recordsTable">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Sequential ID</th>
+                  <th>Student Group</th>
+                  <th>Sender</th>
+                  <th>Transcript</th>
+                  <th>AI Summary</th>
+                  <th>Action Item</th>
+                  <th>Priority</th>
+                  <th>Sentiment</th>
+                  <th>Audio Playback</th>
+                </tr>
+              </thead>
+              <tbody id="recordsTableBody">
+                <!-- Data will load dynamically -->
+                <tr id="emptyRow">
+                  <td colspan="10">
+                    <div class="empty-state">
+                      <i class="fa-solid fa-folder-open"></i>
+                      <p>No voice notes captured yet. Send an audio in a group or use the Simulator to start!</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT SIDEBAR: WHATSAPP BOT STATUS & VOICE NOTE SIMULATOR -->
+      <div class="grid">
+        
+        <!-- WHATSAPP CONNECTION STATE PANEL -->
+        <div class="card">
+          <div class="card-title">
+            <span><i class="fa-solid fa-link"></i> WhatsApp Bot Status</span>
+            <span class="status-indicator">
+              <span class="status-dot" id="statusDot"></span>
+              <span id="statusText">Loading...</span>
+            </span>
+          </div>
+          
+          <div class="status-panel">
+            <!-- QR CODE BOX -->
+            <div class="qr-container" id="qrContainer" style="display: none;">
+              <!-- Base64 QR code URL injected here -->
+            </div>
+            
+            <div id="statusDetails">
+              <p class="file-upload-text" style="margin-bottom: 1rem;" id="statusSubtext">
+                Bot is booting up Puppeteer browser in the background.
+              </p>
+            </div>
+            
+            <div style="display: flex; gap: 0.5rem; width: 100%;">
+              <button class="btn btn-primary" style="flex: 1;" id="restartBotBtn">
+                <i class="fa-solid fa-power-off"></i> Reconnect Bot
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- VOICE NOTE SIMULATOR PANEL -->
+        <div class="card">
+          <div class="card-title">
+            <span><i class="fa-solid fa-terminal"></i> Voice Note Simulator</span>
+            <span class="tag tag-student" style="font-size: 0.65rem;">Developer Console</span>
+          </div>
+          
+          <form id="simulatorForm" enctype="multipart/form-data">
+            
+            <div class="form-group">
+              <label for="simStudentName">Student Group Name</label>
+              <input type="text" id="simStudentName" class="form-control" placeholder="e.g. Rahul Sharma" required value="Rahul Sharma">
+            </div>
+            
+            <div class="form-group">
+              <label for="simSender">Sender Role</label>
+              <select id="simSender" class="form-control">
+                <option value="Student" selected>Student (Default)</option>
+                <option value="Mentor">Edoofa Mentor</option>
+                <option value="Parent">Parent</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label>Voice Note File (.mp3, .wav, .ogg)</label>
+              <div class="file-upload-wrapper">
+                <input type="file" id="simAudioFile" name="audio" accept="audio/*">
+                <div class="file-upload-text">
+                  <i class="fa-solid fa-microphone-lines"></i>
+                  <span id="fileLabel">Upload test audio file (or leave empty to run a smart virtual simulation)</span>
+                </div>
+              </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%;" id="simulateSubmitBtn">
+              <i class="fa-solid fa-play"></i> Run AI & Sheets Pipeline
+            </button>
+          </form>
+        </div>
+
+        <!-- PIPELINE LOG TERMINAL -->
+        <div class="card">
+          <div class="card-title">
+            <span><i class="fa-solid fa-list-check"></i> Pipeline Live Activity</span>
+            <button class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.7rem;" id="clearLogsBtn">
+              Clear Logs
+            </button>
+          </div>
+          
+          <div class="activity-log" id="activityLog">
+            <div class="log-entry info">
+              <span class="log-time">[System]</span>
+              <span class="log-text">Dashboard connected to server events feed. Watching for updates...</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- API SETTINGS DRAWERS -->
+  <div class="settings-overlay" id="settingsOverlay">
+    <div class="settings-drawer">
+      <div class="settings-header">
+        <h3><i class="fa-solid fa-gears"></i> API Settings</h3>
+        <button class="close-btn" id="closeSettingsBtn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="info-box">
+        <strong>Dual-Mode Storage active:</strong> If your Google credentials are not set, the pipeline writes to our local database mockup. Fill these to activate live features!
+      </div>
+
+      <form id="settingsForm">
+        <div class="form-group">
+          <label for="settingOpenAIKey">OpenAI API Key</label>
+          <input type="password" id="settingOpenAIKey" class="form-control" placeholder="sk-proj-...">
+          <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem; display: block;">
+            Used for Whisper transcription and GPT-4o-mini triage.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label for="settingGroqKey">Groq API Key (Ultra-Fast & Cost-Effective)</label>
+          <input type="password" id="settingGroqKey" class="form-control" placeholder="gsk_...">
+          <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem; display: block;">
+            Prioritizes lightning-fast Groq Whisper (large-v3) and Llama-3 (70b) parsing.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label for="settingSpreadsheetId">Google Spreadsheet ID</label>
+          <input type="text" id="settingSpreadsheetId" class="form-control" placeholder="1a2b3c4d5e...">
+        </div>
+
+        <div class="form-group">
+          <label for="settingSheetName">Sheet Name</label>
+          <input type="text" id="settingSheetName" class="form-control" placeholder="Sheet1" value="Sheet1">
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+          <button type="submit" class="btn btn-primary" style="flex: 1;">
+            <i class="fa-solid fa-floppy-disk"></i> Apply Changes
+          </button>
+          <button type="button" class="btn btn-secondary" id="cancelSettingsBtn">Cancel</button>
+        </div>
+      </form>
+      
+      <div style="margin-top: 2rem; border-top: 1px solid var(--border-glass); padding-top: 1.5rem;">
+        <h4 style="color: var(--accent-cyan); font-size: 1rem; margin-bottom: 0.75rem;">Google Sheets Setup Guide:</h4>
+        <ol style="font-size: 0.8rem; color: var(--text-muted); padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem;">
+          <li>Create a Google Sheet and copy its ID from the URL.</li>
+          <li>Place your Google Cloud Service Account JSON file as <code>credentials.json</code> in the workspace root.</li>
+          <li>Open the JSON file, copy the service account <code>client_email</code>.</li>
+          <li>Share your Google Sheet with that email as an **Editor**.</li>
+          <li>Paste the Sheet ID above and save!</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT -->
+  <script src="/app.js"></script>
+</body>
+</html>
